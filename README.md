@@ -1,4 +1,7 @@
-# vfx_tracker
+# vfx_tracker 
+
+<img width="64" height="64" alt="icons8-pickup-point-64" src="https://github.com/user-attachments/assets/d15c884f-5e1e-4970-8adc-0a7f2ee677b9" />
+
 
 VFX & 3D Studio Tracker est un outil de bureau pour les professionnels de la VFX et du 3D qui cherchent un emploi. Il centralise le suivi des candidatures envoyées aux studios : coordonnées, statuts, contacts, pièces jointes, et bien plus, le tout stocké localement.
 
