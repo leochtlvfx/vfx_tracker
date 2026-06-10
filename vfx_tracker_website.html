@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VFX Tracker — Gérez vos candidatures studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* App palette exacte */
+  --bg:     #0E0E10;
+  --panel:  #161618;
+  --hover:  #1E1E22;
+  --sel:    #252530;
+  --surf:   #1A1A1E;
+  --surf2:  #222228;
+  --border: #32323C;
+  --txt:    #F4F4F6;
+  --txt2:   #C0C0CC;
+  --txt3:   #6B6B7A;
+  --acc:    #FFFFFF;
+
+  /* Status colors */
+  --s-todo:     #8888AA;
+  --s-applied:  #6B9FFF;
+  --s-followup: #F0A840;
+  --s-interview:#B085FF;
+  --s-test:     #FF6FA8;
+  --s-refused:  #FF6060;
+  --s-accepted: #50D090;
+
+  /* Spec colors */
+  --vfx-bg: #17254A; --vfx-fg: #7EAAFF;
+  --anim-bg: #251545; --anim-fg: #B090FF;
+  --motion-bg: #12303A; --motion-fg: #60D0E0;
+  --jv-bg: #122A18; --jv-fg: #55D080;
+
+  /* Site fonts */
+  --f-display: 'Syne', sans-serif;
+  --f-body: 'DM Sans', sans-serif;
+  --f-mono: 'DM Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surf2); }
+
+/* ── Nav ────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px;
+  height: 60px;
+  background: rgba(14,14,16,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--txt);
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--s-accepted); }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--txt3);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--txt); }
+
+/* ── Hero ───────────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 120px 24px 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(107,159,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--s-applied);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp .6s .1s forwards;
+}
+.hero h1 {
+  font-family: var(--f-display);
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--txt);
+  max-width: 900px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp .6s .2s forwards;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--s-applied) 0%, var(--s-interview) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: 18px;
+  color: var(--txt2);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  font-weight: 300;
+  opacity: 0;
+  animation: fadeUp .6s .3s forwards;
+}
+.hero-cta {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  opacity: 0;
+  animation: fadeUp .6s .4s forwards;
+}
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--txt); color: var(--bg);
+  font-family: var(--f-body); font-weight: 600; font-size: 14px;
+  padding: 12px 28px; border-radius: 8px;
+  text-decoration: none; border: none; cursor: pointer;
+  transition: transform .15s, opacity .15s;
+}
+.btn-primary:hover { opacity: .85; transform: translateY(-1px); }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--txt2);
+  font-family: var(--f-body); font-weight: 500; font-size: 14px;
+  padding: 12px 28px; border-radius: 8px; border: 1px solid var(--border);
+  text-decoration: none; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn-outline:hover { background: var(--surf); color: var(--txt); border-color: var(--txt3); }
+
+/* ── Stats strip ────────────────────────────────────────────── */
+.stats-strip {
+  display: flex; gap: 0; justify-content: center;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+  opacity: 0;
+  animation: fadeUp .6s .5s forwards;
+}
+.stat-item {
+  flex: 1; max-width: 220px;
+  padding: 28px 0; text-align: center;
+  border-right: 1px solid var(--border);
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: var(--f-display);
+  font-size: 36px; font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--txt);
+  display: block;
+}
+.stat-lbl {
+  font-family: var(--f-mono);
+  font-size: 11px; letter-spacing: .1em;
+  color: var(--txt3); text-transform: uppercase;
+}
+
+/* ── Section base ───────────────────────────────────────────── */
+section { padding: 100px 24px; }
+.container { max-width: 1100px; margin: 0 auto; }
+.section-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px; letter-spacing: .18em;
+  color: var(--txt3); text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--f-display);
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 700; letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--txt);
+  margin-bottom: 16px;
+}
+.section-sub {
+  font-size: 17px; color: var(--txt2);
+  font-weight: 300; line-height: 1.7;
+  max-width: 500px;
+}
+
+/* ── Features grid ──────────────────────────────────────────── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 64px;
+}
+.feat-card {
+  background: var(--panel);
+  padding: 40px 36px;
+  position: relative;
+  transition: background .2s;
+}
+.feat-card:hover { background: var(--surf); }
+.feat-icon {
+  font-size: 28px;
+  margin-bottom: 20px;
+  display: block;
+}
+.feat-title {
+  font-family: var(--f-display);
+  font-size: 18px; font-weight: 600;
+  color: var(--txt); margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+.feat-desc { font-size: 14px; color: var(--txt3); line-height: 1.7; }
+
+/* ── Status badges (déco) ───────────────────────────────────── */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 11px; padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ── Demo section ───────────────────────────────────────────── */
+#demo {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.demo-intro { margin-bottom: 48px; }
+
+/* ── APP SHELL (reproduction fidèle) ───────────────────────── */
+.app-shell {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 680px;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 260px 1px 1fr;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6);
+}
+
+/* Topbar */
+.app-topbar {
+  grid-column: 1 / -1;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+}
+.win-dots { display: flex; gap: 6px; margin-right: 10px; }
+.win-dot { width: 12px; height: 12px; border-radius: 50%; }
+.win-dot.r { background: #FF5F57; }
+.win-dot.y { background: #FEBC2E; }
+.win-dot.g { background: #28C840; }
+.app-title-bar {
+  font-family: var(--f-mono);
+  font-size: 12px; color: var(--txt3);
+  flex: 1;
+}
+.app-topbar-btns { display: flex; gap: 6px; margin-left: auto; }
+.topbar-btn {
+  font-family: var(--f-mono);
+  font-size: 11px; color: var(--txt3);
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.topbar-btn:hover { background: var(--sel); color: var(--txt); }
+.topbar-btn.active { background: var(--sel); color: var(--txt2); }
+
+/* Left panel */
+.app-left {
+  background: var(--panel);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.app-search {
+  margin: 10px 10px 6px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.app-search input {
+  background: none; border: none; outline: none;
+  font-family: var(--f-mono);
+  font-size: 12px; color: var(--txt); flex: 1;
+  min-width: 0;
+}
+.app-search input::placeholder { color: var(--txt3); }
+.app-search-icon { color: var(--txt3); font-size: 12px; }
+.app-filters {
+  padding: 4px 10px 6px;
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.filter-chip {
+  font-family: var(--f-mono); font-size: 10px;
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 9px;
+  color: var(--txt3); cursor: pointer;
+  transition: all .15s;
+}
+.filter-chip:hover, .filter-chip.on { background: var(--sel); color: var(--txt2); border-color: var(--txt3); }
+.app-list {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.app-list-item {
+  padding: 7px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 2px 6px;
+  position: relative;
+  transition: background .1s;
+}
+.app-list-item:hover { background: var(--hover); }
+.app-list-item.selected { background: var(--sel); }
+.app-list-item.selected::before {
+  content: '';
+  position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 3px; background: var(--s-applied);
+  border-radius: 2px;
+}
+.list-row1 { display: flex; align-items: center; gap: 6px; }
+.list-dot { font-size: 8px; flex-shrink: 0; }
+.list-name { font-size: 13px; font-weight: 600; color: var(--txt); flex: 1; }
+.list-status-txt { font-size: 10px; font-family: var(--f-mono); white-space: nowrap; }
+.list-row2 { font-size: 11px; color: var(--txt3); padding-left: 14px; font-family: var(--f-mono); }
+.app-stats-bar {
+  background: var(--surf);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px;
+  font-family: var(--f-mono);
+  font-size: 10px; color: var(--txt3);
+}
+
+/* Separator */
+.app-sep { background: var(--border); }
+
+/* Right panel */
+.app-right {
+  background: var(--bg);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  display: flex; flex-direction: column;
+}
+
+/* Detail view */
+.detail-header {
+  padding: 24px 28px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+}
+.detail-logo-row { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.detail-logo-placeholder {
+  width: 52px; height: 52px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.detail-name {
+  font-family: var(--f-display);
+  font-size: 22px; font-weight: 700;
+  color: var(--txt); margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+.detail-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.detail-meta-chip {
+  font-family: var(--f-mono);
+  font-size: 10px; padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--surf2); color: var(--txt3);
+  border: 1px solid var(--border);
+}
+
+/* Status bar in detail */
+.detail-status-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+}
+.status-btn {
+  font-family: var(--f-mono);
+  font-size: 11px; padding: 5px 12px;
+  border-radius: 20px;
+  background: transparent; border: none;
+  cursor: pointer; transition: all .15s;
+  color: var(--txt3);
+}
+.status-btn:hover { background: var(--surf2); }
+.status-btn.active {
+  background: var(--surf2);
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+
+/* Sections in detail */
+.detail-section { padding: 20px 28px; border-bottom: 1px solid var(--border); }
+.detail-section:last-child { border-bottom: none; }
+.detail-section-label {
+  font-family: var(--f-mono);
+  font-size: 10px; letter-spacing: .15em;
+  color: var(--txt3); text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.detail-field label {
+  font-family: var(--f-mono); font-size: 10px;
+  color: var(--txt3); display: block; margin-bottom: 4px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.detail-field span {
+  font-size: 13px; color: var(--txt2);
+}
+.detail-field a {
+  font-size: 13px; color: var(--s-applied);
+  text-decoration: none;
+}
+.contact-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  margin-bottom: 6px;
+}
+.contact-name { font-size: 13px; font-weight: 600; color: var(--txt); }
+.contact-role { font-size: 11px; color: var(--txt3); font-family: var(--f-mono); }
+.notes-box {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  font-size: 13px; color: var(--txt2);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* Kanban view */
+.kanban-view {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.kanban-view.visible { display: flex; }
+.kanban-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.kanban-title {
+  font-family: var(--f-mono); font-size: 12px;
+  color: var(--txt3); letter-spacing: .12em; text-transform: uppercase;
+}
+.kanban-cols {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 12px;
+  overflow: hidden;
+}
+.kanban-col {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.kanban-col-hdr {
+  padding: 8px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.kanban-col-name { font-size: 10px; font-weight: 600; font-family: var(--f-mono); }
+.kanban-count {
+  font-family: var(--f-mono); font-size: 10px;
+  background: var(--surf2);
+  border-radius: 10px; padding: 1px 6px;
+  color: var(--txt3);
+}
+.kanban-cards { flex: 1; overflow-y: auto; padding: 6px; }
+.kanban-card {
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px;
+  margin-bottom: 4px; cursor: pointer;
+  transition: background .1s;
+  font-size: 11px;
+}
+.kanban-card:hover { background: var(--hover); }
+.kanban-card-name { font-weight: 600; color: var(--txt); margin-bottom: 2px; }
+.kanban-card-sub { color: var(--txt3); font-family: var(--f-mono); font-size: 10px; }
+
+/* Welcome screen */
+.welcome-screen {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+.welcome-icon { font-size: 40px; margin-bottom: 16px; }
+.welcome-title {
+  font-family: var(--f-display); font-size: 20px;
+  color: var(--txt2); margin-bottom: 8px;
+}
+.welcome-sub { font-size: 13px; color: var(--txt3); font-family: var(--f-mono); }
+
+/* ── How it works ───────────────────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2px; margin-top: 60px; }
+.step { padding: 36px 30px; position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 0; }
+.step:first-child { border-radius: 10px 0 0 10px; }
+.step:last-child { border-radius: 0 10px 10px 0; }
+.step-num {
+  font-family: var(--f-display); font-size: 48px; font-weight: 800;
+  color: var(--border); letter-spacing: -0.04em;
+  line-height: 1; margin-bottom: 20px;
+  display: block;
+}
+.step-title { font-family: var(--f-display); font-size: 17px; font-weight: 600; color: var(--txt); margin-bottom: 8px; }
+.step-desc { font-size: 13px; color: var(--txt3); line-height: 1.7; }
+
+/* ── Specialties showcase ───────────────────────────────────── */
+.spec-pills {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 40px;
+}
+.spec-pill {
+  font-family: var(--f-mono); font-size: 12px;
+  padding: 7px 16px; border-radius: 20px;
+  letter-spacing: .04em; font-weight: 500;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 40px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-brand {
+  font-family: var(--f-display); font-size: 16px; font-weight: 700;
+  color: var(--txt2);
+}
+.footer-sub {
+  font-family: var(--f-mono); font-size: 11px;
+  color: var(--txt3); margin-top: 4px;
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.reveal.in { opacity: 1; transform: none; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  section { padding: 70px 20px; }
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px 240px 1fr;
+    height: auto; max-height: 700px;
+  }
+  .app-sep { display: none; }
+  .kanban-cols { grid-template-columns: repeat(3, 1fr); }
+  footer { flex-direction: column; gap: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="dot"></div>
+    VFX Tracker
+  </div>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#demo">Démo</a>
+    <a href="#how">Utilisation</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-eyebrow">Outil de suivi · VFX & 3D</div>
+  <h1>Gérez vos candidatures<br>studio <em>sans effort</em></h1>
+  <p class="hero-sub">Suivez chaque studio, chaque contact, chaque statut dans un seul outil desktop. Conçu par des artistes VFX, pour des artistes VFX.</p>
+  <div class="hero-cta">
+    <a href="#demo" class="btn-primary">Voir la démo →</a>
+    <a href="#features" class="btn-outline">Découvrir les fonctionnalités</a>
+  </div>
+</section>
+
+<!-- ── Stats ── -->
+<div class="stats-strip">
+  <div class="stat-item">
+    <span class="stat-num">7</span>
+    <span class="stat-lbl">statuts de candidature</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">11</span>
+    <span class="stat-lbl">spécialités reconnues</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">100%</span>
+    <span class="stat-lbl">local &amp; hors-ligne</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">∞</span>
+    <span class="stat-lbl">studios trackables</span>
+  </div>
+</div>
+
+<!-- ── Features ── -->
+<section id="features">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">Fonctionnalités</div>
+      <h2 class="section-title">Tout ce qu'il faut pour<br>une recherche organisée</h2>
+      <p class="section-sub">De la liste aux contacts en passant par les productions connues de chaque studio.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feat-card">
+        <span class="feat-icon">📋</span>
+        <div class="feat-title">Suivi par statut</div>
+        <p class="feat-desc">7 statuts colorés : À postuler, Postulé, Relancé, Entretien, Test technique, Refusé, Accepté. Changement en un clic depuis la liste ou le détail.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🏢</span>
+        <div class="feat-title">Fiches studio complètes</div>
+        <p class="feat-desc">Site web, email, ville, pays, taille, spécialité, adresse. Notes libres, logo importable, étiquettes colorées personnalisées.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">👤</span>
+        <div class="feat-title">Contacts internes</div>
+        <p class="feat-desc">Ajoutez les RH, superviseurs, leads que vous connaissez dans chaque studio. Nom, rôle, LinkedIn, email, téléphone.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🎬</span>
+        <div class="feat-title">Productions du studio</div>
+        <p class="feat-desc">Référencez les films, séries, pubs auxquels le studio a participé. Utile pour préparer vos entretiens.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📊</span>
+        <div class="feat-title">Vue Kanban</div>
+        <p class="feat-desc">Visualisez tous vos studios par colonne de statut. Un coup d'œil pour comprendre où vous en êtes dans votre recherche.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">⭐</span>
+        <div class="feat-title">Priorités &amp; favoris</div>
+        <p class="feat-desc">3 niveaux de priorité (Haute, Normale, Basse) + système de favoris pour mettre en avant les studios qui comptent.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">📎</span>
+        <div class="feat-title">Pièces jointes</div>
+        <p class="feat-desc">Attachez des fichiers directement à un studio : CV envoyé, brief, retour, notes de réunion. Tous vos documents centralisés.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🔍</span>
+        <div class="feat-title">Recherche avancée</div>
+        <p class="feat-desc">Filtres par statut, spécialité, priorité, et recherche texte cross-champs incluant les noms de contacts.</p>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">💾</span>
+        <div class="feat-title">Export CSV &amp; backup</div>
+        <p class="feat-desc">Exportez votre base en CSV, importez depuis un fichier existant. Sauvegardes automatiques de la base SQLite locale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Specialties ── -->
+<section style="padding: 0 24px 80px;">
+  <div class="container reveal">
+    <div class="section-eyebrow">Spécialités supportées</div>
+    <div class="spec-pills">
+      <span class="spec-pill" style="background:var(--vfx-bg);color:var(--vfx-fg)">VFX</span>
+      <span class="spec-pill" style="background:var(--anim-bg);color:var(--anim-fg)">Animation 3D</span>
+      <span class="spec-pill" style="background:var(--motion-bg);color:var(--motion-fg)">Motion Design</span>
+      <span class="spec-pill" style="background:var(--jv-bg);color:var(--jv-fg)">Jeux Vidéo</span>
+      <span class="spec-pill" style="background:#3A2808;color:#F0A840">Publicité</span>
+      <span class="spec-pill" style="background:#3A1212;color:#FF7070">Long-métrage</span>
+      <span class="spec-pill" style="background:#3A1028;color:#FF70A0">Série TV</span>
+      <span class="spec-pill" style="background:#18203A;color:#90A8D8">Archiviz</span>
+      <span class="spec-pill" style="background:#221230;color:#C080FF">Réalité Virtuelle</span>
+      <span class="spec-pill" style="background:#2A2008;color:#D8B030">R&amp;D</span>
+      <span class="spec-pill" style="background:var(--surf);color:var(--txt3)">Autre</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEMO ── -->
+<section id="demo">
+  <div class="container">
+    <div class="demo-intro reveal">
+      <div class="section-eyebrow">Démo interactive</div>
+      <h2 class="section-title">L'interface exacte,<br>dans votre navigateur</h2>
+      <p class="section-sub">Cliquez sur les studios, changez les statuts, explorez la vue Kanban. C'est exactement ce que vous obtenez.</p>
+    </div>
+    <!-- APP SHELL -->
+    <div class="app-shell reveal" id="appShell">
+
+      <!-- Topbar -->
+      <div class="app-topbar">
+        <div class="win-dots">
+          <div class="win-dot r"></div>
+          <div class="win-dot y"></div>
+          <div class="win-dot g"></div>
+        </div>
+        <div class="app-title-bar">VFX &amp; 3D Studio Tracker</div>
+        <div class="app-topbar-btns">
+          <button class="topbar-btn active" id="btn-list" onclick="switchView('list')">☰ Liste</button>
+          <button class="topbar-btn" id="btn-kanban" onclick="switchView('kanban')">⊞ Kanban</button>
+          <button class="topbar-btn" onclick="addStudio()">+ Studio</button>
+        </div>
+      </div>
+
+      <!-- Left panel -->
+      <div class="app-left" id="appLeft">
+        <div class="app-search">
+          <span class="app-search-icon">⌕</span>
+          <input type="text" id="searchInput" placeholder="Rechercher un studio…" oninput="filterStudios()">
+        </div>
+        <div class="app-filters" id="filterBar"></div>
+        <div class="app-list" id="studioList"></div>
+        <div class="app-stats-bar" id="statsBar">— studios</div>
+      </div>
+
+      <!-- Separator -->
+      <div class="app-sep"></div>
+
+      <!-- Right panel -->
+      <div class="app-right" id="appRight">
+        <!-- Detail view -->
+        <div id="detailView" style="display:flex;flex-direction:column;height:100%;">
+          <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-icon">🎬</div>
+            <div class="welcome-title">Sélectionnez un studio</div>
+            <div class="welcome-sub">Cliquez sur un studio pour voir ses informations</div>
+          </div>
+          <div id="studioDetail" style="display:none;"></div>
+        </div>
+        <!-- Kanban view -->
+        <div class="kanban-view" id="kanbanView">
+          <div class="kanban-header">
+            <span class="kanban-title">Vue Kanban</span>
+            <button class="topbar-btn" onclick="switchView('list')" style="margin-left:auto;">← Retour</button>
+          </div>
+          <div class="kanban-cols" id="kanbanCols"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ── -->
+<section id="how">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">Prise en main</div>
+      <h2 class="section-title">Simple par design</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div class="step-title">Lancez le script</div>
+        <p class="step-desc">Python + customtkinter. Une commande, une fenêtre. Base SQLite créée automatiquement au premier lancement.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div class="step-title">Ajoutez vos studios</div>
+        <p class="step-desc">Importez via CSV ou ajoutez manuellement. Remplissez les infos clés : site, email, spécialité, ville.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div class="step-title">Suivez l'avancement</div>
+        <p class="step-desc">Mettez à jour les statuts, ajoutez vos contacts internes, notez vos impressions après chaque entretien.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <div class="step-title">Pilotez en Kanban</div>
+        <p class="step-desc">La vue Kanban vous donne une vision globale de toute votre recherche. Décidez où concentrer votre énergie.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div>
+    <div class="footer-brand">VFX Tracker</div>
+    <div class="footer-sub">Outil desktop — Python · SQLite · customtkinter</div>
+  </div>
+  <div style="font-family:var(--f-mono);font-size:11px;color:var(--txt3);text-align:right;">
+    Local &amp; hors-ligne<br>Vos données restent sur votre machine
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DEMO DATA
+═══════════════════════════════════════════════════ */
+const STATUS_COLORS = {
+  "À postuler":    "#8888AA",
+  "Postulé":       "#6B9FFF",
+  "Relancé":       "#F0A840",
+  "Entretien":     "#B085FF",
+  "Test technique":"#FF6FA8",
+  "Refusé":        "#FF6060",
+  "Accepté":       "#50D090",
+};
+const STATUSES = Object.keys(STATUS_COLORS);
+const SPEC_COLORS = {
+  "VFX":               {bg:"#17254A",fg:"#7EAAFF"},
+  "Animation 3D":      {bg:"#251545",fg:"#B090FF"},
+  "Motion Design":     {bg:"#12303A",fg:"#60D0E0"},
+  "Jeux Vidéo":        {bg:"#122A18",fg:"#55D080"},
+  "Publicité":         {bg:"#3A2808",fg:"#F0A840"},
+  "Long-métrage":      {bg:"#3A1212",fg:"#FF7070"},
+  "Série TV":          {bg:"#3A1028",fg:"#FF70A0"},
+};
+
+let nextId = 100;
+let studios = [
+  { id:1, name:"ILM Paris", specialty:"VFX", city:"Paris", country:"France", size:"500+", status:"Entretien", priority:"Haute", favorite:true, website:"ilm.com", email:"jobs@ilm.com", notes:"Entretien pipeline TD prévu le 15. Ils travaillent sur un Marvel Phase 5.", contacts:[{name:"Sophie Leblanc",role:"Talent Acquisition"},{name:"Marc Durand",role:"VFX Supervisor"}], productions:[{title:"Avengers: Secret Wars",year:"2025",type:"Film"},{title:"Loki S3",year:"2024",type:"Série TV"}] },
+  { id:2, name:"MPC Montreal", specialty:"VFX", city:"Montréal", country:"Canada", size:"200–500", status:"Postulé", priority:"Haute", favorite:false, website:"mpcvfx.com", email:"", notes:"Candidature envoyée le 3 juin pour le poste FX Artist.", contacts:[{name:"James Wilson",role:"Head of FX"}], productions:[{title:"Dune: Part Three",year:"2025",type:"Film"}] },
+  { id:3, name:"Illumination Paris", specialty:"Animation 3D", city:"Paris", country:"France", size:"100–200", status:"À postuler", priority:"Normale", favorite:false, website:"illumination.com", email:"careers@illumination.com", notes:"Ouvrent un studio Paris. Garder un œil sur les offres.", contacts:[], productions:[] },
+  { id:4, name:"Framestore London", specialty:"VFX", city:"Londres", country:"Royaume-Uni", size:"500+", status:"Refusé", priority:"Normale", favorite:false, website:"framestore.com", email:"", notes:"Refus après test technique. Feedback positif sur le lookdev, manque d'expérience Houdini.", contacts:[], productions:[] },
+  { id:5, name:"Ubisoft Film & TV", specialty:"Jeux Vidéo", city:"Paris", country:"France", size:"200–500", status:"Relancé", priority:"Normale", favorite:false, website:"ubisoft.com", email:"", notes:"Relancé le recruteur après 3 semaines de silence.", contacts:[{name:"Lucie Martin",role:"RH"}], productions:[] },
+  { id:6, name:"La Maison", specialty:"Motion Design", city:"Paris", country:"France", size:"< 50", status:"Accepté", priority:"Haute", favorite:true, website:"lamaison.fr", email:"hello@lamaison.fr", notes:"Offre reçue ! CDD 6 mois. À confirmer avant le 20.", contacts:[{name:"Antoine Faure",role:"Directeur créatif"}], productions:[] },
+  { id:7, name:"Mikros Image", specialty:"Animation 3D", city:"Paris", country:"France", size:"100–200", status:"Test technique", priority:"Haute", favorite:false, website:"mikrosimage.com", email:"", notes:"Test de rigging facial — deadline vendredi.", contacts:[], productions:[] },
+  { id:8, name:"Buf Compagnie", specialty:"VFX", city:"Paris", country:"France", size:"50–100", status:"À postuler", priority:"Basse", favorite:false, website:"buf.com", email:"", notes:"Studio emblématique. Long-métrages art-house.", contacts:[], productions:[] },
+];
+
+let selectedId = null;
+let currentView = 'list';
+let searchQuery = '';
+let filterStatus = 'Tous';
+
+/* ── Render list ─────────────────────────────────── */
+function getFiltered() {
+  const q = searchQuery.toLowerCase();
+  return studios.filter(s => {
+    const matchSearch = !q ||
+      s.name.toLowerCase().includes(q) ||
+      s.city.toLowerCase().includes(q) ||
+      s.specialty.toLowerCase().includes(q) ||
+      s.notes.toLowerCase().includes(q) ||
+      s.contacts.some(c => c.name.toLowerCase().includes(q));
+    const matchStatus = filterStatus === 'Tous' || s.status === filterStatus;
+    return matchSearch && matchStatus;
+  }).sort((a,b) => {
+    if (b.favorite !== a.favorite) return b.favorite - a.favorite;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('studioList');
+  const filtered = getFiltered();
+  list.innerHTML = '';
+  filtered.forEach(s => {
+    const c = STATUS_COLORS[s.status] || '#888';
+    const div = document.createElement('div');
+    div.className = 'app-list-item' + (s.id === selectedId ? ' selected' : '');
+    div.setAttribute('data-id', s.id);
+    div.innerHTML = `
+      <div class="list-row1">
+        <span class="list-dot" style="color:${c}">●</span>
+        <span class="list-name">${s.favorite ? '★ ' : ''}${s.name}</span>
+        <span class="list-status-txt" style="color:${c}">${s.status}</span>
+      </div>
+      <div class="list-row2">${s.specialty}${s.city ? ' · ' + s.city : ''}</div>
+    `;
+    div.onclick = () => selectStudio(s.id);
+    list.appendChild(div);
+  });
+  const total = studios.length;
+  const ongoing = studios.filter(s => ["Postulé","Relancé","Entretien","Test technique"].includes(s.status)).length;
+  const accepted = studios.filter(s => s.status === "Accepté").length;
+  document.getElementById('statsBar').textContent =
+    `${total} studios  ·  ${ongoing} en cours  ·  ${accepted} acceptés`;
+}
+
+/* ── Filter bar ──────────────────────────────────── */
+function renderFilters() {
+  const bar = document.getElementById('filterBar');
+  const statuses = ['Tous', ...STATUSES];
+  bar.innerHTML = statuses.map(st => {
+    const col = STATUS_COLORS[st] || '';
+    const on = st === filterStatus;
+    const style = on && col ? `border-color:${col};color:${col};` : '';
+    return `<span class="filter-chip${on?' on':''}" style="${style}" onclick="setFilter('${st}')">${st}</span>`;
+  }).join('');
+}
+
+function setFilter(st) {
+  filterStatus = st;
+  renderFilters();
+  renderList();
+}
+
+function filterStudios() {
+  searchQuery = document.getElementById('searchInput').value;
+  renderList();
+}
+
+/* ── Select studio ───────────────────────────────── */
+function selectStudio(id) {
+  selectedId = id;
+  renderList();
+  renderDetail();
+  if (currentView === 'kanban') renderKanban();
+}
+
+/* ── Detail view ─────────────────────────────────── */
+function renderDetail() {
+  const s = studios.find(x => x.id === selectedId);
+  const welcome = document.getElementById('welcomeScreen');
+  const detail = document.getElementById('studioDetail');
+  if (!s) { welcome.style.display='flex'; detail.style.display='none'; return; }
+  welcome.style.display='none'; detail.style.display='block';
+
+  const spec = SPEC_COLORS[s.specialty] || {bg:'#222228',fg:'#9090AA'};
+
+  detail.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-logo-row">
+        <div class="detail-logo-placeholder">${s.name[0]}</div>
+        <div>
+          <div class="detail-name">${s.favorite ? '★ ' : ''}${s.name}</div>
+          <div class="detail-meta">
+            <span class="detail-meta-chip" style="background:${spec.bg};color:${spec.fg};border-color:${spec.bg}">${s.specialty}</span>
+            ${s.city ? `<span class="detail-meta-chip">📍 ${s.city}, ${s.country}</span>` : ''}
+            ${s.size ? `<span class="detail-meta-chip">👥 ${s.size}</span>` : ''}
+            ${s.priority === 'Haute' ? `<span class="detail-meta-chip" style="color:#FF6060;border-color:#FF6060">🔴 Priorité haute</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-status-row" id="statusRow">
+      ${STATUSES.map(st => {
+        const c = STATUS_COLORS[st];
+        const active = s.status === st;
+        return `<button class="status-btn${active?' active':''}" style="color:${c};${active?`border-color:${c};`:''}"
+          onclick="quickStatus(${s.id},'${st}')">${st}</button>`;
+      }).join('')}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label">Infos studio</div>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Site web</label><a href="#">${s.website || '—'}</a></div>
+        <div class="detail-field"><label>Email</label><span>${s.email || '—'}</span></div>
+      </div>
+    </div>
+    ${s.notes ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Notes</div>
+      <div class="notes-box">${s.notes}</div>
+    </div>` : ''}
+    ${s.contacts.length ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Contacts (${s.contacts.length})</div>
+      ${s.contacts.map(c => `
+        <div class="contact-card">
+          <div class="contact-name">👤 ${c.name}</div>
+          <div class="contact-role">${c.role}</div>
+        </div>`).join('')}
+    </div>` : ''}
+    ${s.productions.length ? `
+    <div class="detail-section">
+      <div class="detail-section-label">Productions (${s.productions.length})</div>
+      ${s.productions.map(p => `
+        <div class="contact-card">
+          <div class="contact-name">🎬 ${p.title}</div>
+          <div class="contact-role">${p.year} · ${p.type}</div>
+        </div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+/* ── Quick status change ─────────────────────────── */
+function quickStatus(id, status) {
+  const s = studios.find(x => x.id === id);
+  if (!s) return;
+  s.status = status;
+  renderList();
+  renderDetail();
+  if (currentView === 'kanban') renderKanban();
+}
+
+/* ── Kanban ──────────────────────────────────────── */
+function renderKanban() {
+  const cols = document.getElementById('kanbanCols');
+  cols.innerHTML = '';
+  STATUSES.forEach(st => {
+    const c = STATUS_COLORS[st];
+    const items = studios.filter(s => s.status === st);
+    const col = document.createElement('div');
+    col.className = 'kanban-col';
+    col.innerHTML = `
+      <div class="kanban-col-hdr">
+        <span class="kanban-col-name" style="color:${c}">${st}</span>
+        <span class="kanban-count" style="color:${c}">${items.length}</span>
+      </div>
+      <div class="kanban-cards">
+        ${items.map(s => `
+          <div class="kanban-card" onclick="selectStudio(${s.id})">
+            <div class="kanban-card-name">${s.favorite ? '★ ' : ''}${s.name}</div>
+            ${s.city ? `<div class="kanban-card-sub">${s.city}</div>` : ''}
+          </div>`).join('')}
+      </div>
+    `;
+    cols.appendChild(col);
+  });
+}
+
+/* ── Switch view ─────────────────────────────────── */
+function switchView(view) {
+  currentView = view;
+  const detail = document.getElementById('detailView');
+  const kanban = document.getElementById('kanbanView');
+  const btnList = document.getElementById('btn-list');
+  const btnKanban = document.getElementById('btn-kanban');
+  const left = document.getElementById('appLeft');
+
+  if (view === 'kanban') {
+    detail.style.display='none'; kanban.classList.add('visible');
+    btnKanban.classList.add('active'); btnList.classList.remove('active');
+    renderKanban();
+  } else {
+    kanban.classList.remove('visible'); detail.style.display='flex';
+    btnList.classList.add('active'); btnKanban.classList.remove('active');
+    renderDetail();
+  }
+}
+
+/* ── Add studio (demo) ───────────────────────────── */
+function addStudio() {
+  const name = prompt('Nom du studio :');
+  if (!name || !name.trim()) return;
+  const s = {
+    id: nextId++, name: name.trim(),
+    specialty: 'VFX', city: 'Paris', country: 'France',
+    size: '', status: 'À postuler', priority: 'Normale',
+    favorite: false, website: '', email: '',
+    notes: '', contacts: [], productions: []
+  };
+  studios.unshift(s);
+  renderList();
+  selectStudio(s.id);
+}
+
+/* ── Init ─────────────────────────────────────────── */
+renderFilters();
+renderList();
+// Select first by default
+selectStudio(studios[0].id);
+
+/* ── Scroll reveal ───────────────────────────────── */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
