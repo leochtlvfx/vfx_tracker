@@ -5,6 +5,9 @@ VFX & 3D Studio Tracker est un outil de bureau pour les professionnels de la VFX
 La base de données (vfx_studios.db) et les dossiers backups/, attachments/ et logos/ sont créés automatiquement dans le même répertoire que le script.
 Pour associer un logo à un studio, placez une image dans le dossier logos/ en nommant le fichier exactement comme le studio (ex. ILM.png). Le dossier logos peut être changé dans Paramètres.
 
+Présentation de l'outil -> [vfx_tracker_website.html](https://github.com/user-attachments/files/28795056/vfx_tracker_website.html)#
+
+
 ## Fonctionnalitées 
 
 - Gestion des studios : nom, site web, email, spécialité(s), taille, villes / adresses postales (multiples), logo
