@@ -23,10 +23,13 @@ Pour associer un logo à un studio, placez une image dans le dossier logos/ en n
 
 ## Interface
 
+### Interface de l'outil
 <img width="2546" height="1356" alt="Interface_vfx_tracker" src="https://github.com/user-attachments/assets/fab98df4-e045-4b50-9874-5bbd6de3fccb" />
 
+### Ajout de Studio
 <img width="544" height="758" alt="nouveau_studio_1" src="https://github.com/user-attachments/assets/e80899db-724e-4f3c-a463-1e8c0ecd40b2" />
 
+### Ajout 
 <img width="548" height="758" alt="nouveau_studio_2" src="https://github.com/user-attachments/assets/f173b196-26c8-4a84-a9c4-d08878177b50" />
 
 <img width="477" height="420" alt="nouvelle_production" src="https://github.com/user-attachments/assets/de6eb745-601d-44f7-ac77-efd26106f0de" />
